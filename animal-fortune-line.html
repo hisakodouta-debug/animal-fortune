@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>動物キャラ占い</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    background: linear-gradient(180deg, #FFF8E1 0%, #FFF3E0 50%, #FFF8E1 100%);
+    min-height: 100vh;
+    color: #333;
+    line-height: 1.6;
+    padding: 0;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #a4c639, #8db32a);
+    text-align: center;
+    padding: 20px 16px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: "";
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+  }
+  .header-emoji { font-size: 36px; margin-bottom: 4px; }
+  .header-title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    letter-spacing: 2px;
+  }
+  .header-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+    margin-top: 4px;
+    letter-spacing: 1px;
+  }
+
+  /* Container */
+  .container {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+
+  /* Form Card */
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: bold;
+    color: #5d8a1e;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .num {
+    width: 24px; height: 24px;
+    background: #a4c639;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  /* Birthday inputs */
+  .birthday-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .birthday-row input {
+    width: 72px;
+    padding: 12px 6px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 18px;
+    text-align: center;
+    background: #fafafa;
+    color: #333;
+    transition: border-color 0.3s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .birthday-row input:focus {
+    outline: none;
+    border-color: #a4c639;
+    background: #fff;
+  }
+  .birthday-row .unit {
+    font-size: 14px;
+    color: #888;
+    min-width: 16px;
+  }
+
+  /* Gender */
+  .gender-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  .gender-btn {
+    flex: 1;
+    max-width: 140px;
+    padding: 14px 0;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background: #fafafa;
+    cursor: pointer;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.3s;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .gender-btn.male { color: #42A5F5; }
+  .gender-btn.female { color: #EC407A; }
+  .gender-btn.active {
+    border-color: #a4c639;
+    background: #f0f7d4;
+    box-shadow: 0 2px 8px rgba(164,198,57,0.3);
+  }
+
+  /* CTA Button */
+  .cta-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #a4c639, #8db32a);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(164,198,57,0.4);
+    transition: all 0.3s;
+    margin-top: 20px;
+  }
+  .cta-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 8px rgba(164,198,57,0.3);
+  }
+
+  /* Result */
+  .result-card {
+    display: none;
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    text-align: center;
+    animation: fadeInUp 0.5s ease;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .result-label {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 6px;
+  }
+  .result-emoji {
+    font-size: 80px;
+    margin: 8px 0;
+    animation: bounce 0.6s ease 0.3s;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+  .result-number {
+    display: inline-block;
+    background: #f0f7d4;
+    color: #5d8a1e;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .result-name {
+    font-size: 26px;
+    font-weight: bold;
+    color: #333;
+    margin: 8px 0 4px;
+  }
+  .result-animal-type {
+    font-size: 14px;
+    color: #a4c639;
+    font-weight: bold;
+    margin-bottom: 16px;
+  }
+  .result-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #ddd, transparent);
+    margin: 16px 0;
+  }
+  .result-desc {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.9;
+    text-align: left;
+    padding: 16px;
+    background: #fafaf5;
+    border-radius: 12px;
+  }
+  .result-traits {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .trait-tag {
+    background: #f0f7d4;
+    color: #5d8a1e;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+  }
+
+  /* Retry button */
+  .retry-btn {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 40px;
+    background: #fff;
+    color: #a4c639;
+    border: 2px solid #a4c639;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .retry-btn:active {
+    background: #f0f7d4;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    color: #bbb;
+  }
+
+  /* Error shake */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  .shake { animation: shake 0.3s; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-emoji">🐾</div>
+  <div class="header-title">動物キャラ占い</div>
+  <div class="header-sub">あなたの本質を60種類の動物キャラで診断</div>
+</div>
+
+<!-- Form -->
+<div class="container">
+
+  <div class="card" id="formCard">
+    <div class="card-title"><span class="num">1</span> 生年月日を入力</div>
+    <div class="birthday-row">
+      <input type="number" id="birthYear" placeholder="1990" inputmode="numeric" pattern="[0-9]*">
+      <span class="unit">年</span>
+      <input type="number" id="birthMonth" placeholder="1" inputmode="numeric" pattern="[0-9]*">
+      <span class="unit">月</span>
+      <input type="number" id="birthDay" placeholder="1" inputmode="numeric" pattern="[0-9]*">
+      <span class="unit">日</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="num">2</span> 性別を選択</div>
+    <div class="gender-row">
+      <div class="gender-btn male" onclick="selectGender(this,'男性')">♂ 男性</div>
+      <div class="gender-btn female" onclick="selectGender(this,'女性')">♀ 女性</div>
+    </div>
+  </div>
+
+  <button class="cta-btn" onclick="doFortune()">🔮 動物を見てみる</button>
+
+  <!-- Result -->
+  <div class="result-card" id="resultCard">
+    <div class="result-label">あなたの動物キャラは…</div>
+    <div class="result-emoji" id="resultEmoji"></div>
+    <div class="result-number" id="resultNumber"></div>
+    <div class="result-name" id="resultName"></div>
+    <div class="result-animal-type" id="resultType"></div>
+    <div class="result-divider"></div>
+    <div class="result-desc" id="resultDesc"></div>
+    <div class="result-traits" id="resultTraits"></div>
+    <button class="retry-btn" onclick="retry()">もう一度占う</button>
+  </div>
+
+  <div class="footer">© 動物キャラ占い</div>
+</div>
+
+<script>
+// 生年月日早見表データ
+const Y={1945:[6,37,5,36,6,37,7,38,9,39,10,40],1946:[11,42,10,41,11,42,12,43,14,44,15,45],1947:[16,47,15,46,16,47,17,48,19,49,20,50],1948:[21,52,21,52,22,53,23,54,25,55,26,56],1949:[27,58,26,57,27,58,28,59,30,0,31,1],1950:[32,3,31,2,32,3,33,4,35,5,36,6],1951:[37,8,36,7,37,8,38,9,40,10,41,11],1952:[42,13,42,13,43,14,44,15,46,16,47,17],1953:[48,19,47,18,48,19,49,20,51,21,52,22],1954:[53,24,52,23,53,24,54,25,56,26,57,27],1955:[58,29,57,28,58,29,59,30,1,31,2,32],1956:[3,34,3,34,4,35,5,36,7,37,8,38],1957:[9,40,8,39,9,40,10,41,12,42,13,43],1958:[14,45,13,44,14,45,15,46,17,47,18,48],1959:[19,50,18,49,19,50,20,51,22,52,23,53],1960:[24,55,24,55,25,56,26,57,28,58,29,59],1961:[30,1,29,0,30,1,31,2,33,3,34,4],1962:[35,6,34,5,35,6,36,7,38,8,39,9],1963:[40,11,39,10,40,11,41,12,43,13,44,14],1964:[45,16,45,16,46,17,47,18,49,19,50,20],1965:[51,22,50,21,51,22,52,23,54,24,55,25],1966:[56,27,55,26,56,27,57,28,59,29,0,30],1967:[1,32,0,31,1,32,2,33,4,34,5,35],1968:[6,37,6,37,7,38,8,39,10,40,11,41],1969:[12,43,11,42,12,43,13,44,15,45,16,46],1970:[17,48,16,47,17,48,18,49,20,50,21,51],1971:[22,53,21,52,22,53,23,54,25,55,26,56],1972:[27,58,27,58,28,59,29,0,31,1,32,2],1973:[33,4,32,3,33,4,34,5,36,6,37,7],1974:[38,9,37,8,38,9,39,10,41,11,42,12],1975:[43,14,42,13,43,14,44,15,46,16,47,17],1976:[48,19,48,19,49,20,50,21,52,22,53,23],1977:[54,25,53,24,54,25,55,26,57,27,58,28],1978:[59,30,58,29,59,30,0,31,2,32,3,33],1979:[4,35,3,34,4,35,5,36,7,37,8,38],1980:[9,40,9,40,10,41,11,42,13,43,14,44],1981:[15,46,14,45,15,46,16,47,18,48,19,49],1982:[20,51,19,50,20,51,21,52,23,53,24,54],1983:[25,56,24,55,25,56,26,57,28,58,29,59],1984:[30,1,30,1,31,2,32,3,34,4,35,5],1985:[36,7,35,6,36,7,37,8,39,9,40,10],1986:[41,12,40,11,41,12,42,13,44,14,45,15],1987:[46,17,45,16,46,17,47,18,49,19,50,20],1988:[51,22,51,22,52,23,53,24,55,25,56,26],1989:[57,28,56,27,57,28,58,29,0,30,1,31],1990:[2,33,1,32,2,33,3,34,5,35,6,36],1991:[7,38,6,37,7,38,8,39,10,40,11,41],1992:[12,43,12,43,13,44,14,45,16,46,17,47],1993:[18,49,17,48,18,49,19,50,21,51,22,52],1994:[23,54,22,53,23,54,24,55,26,56,27,57],1995:[28,59,27,58,28,59,29,0,31,1,32,2],1996:[33,4,33,4,34,5,35,6,37,7,38,8],1997:[39,10,38,9,39,10,40,11,42,12,43,13],1998:[44,15,43,14,44,15,45,16,47,17,48,18],1999:[49,20,48,19,49,20,50,21,52,22,53,23],2000:[54,25,54,25,55,26,56,27,58,28,59,29],2001:[0,31,59,30,0,31,1,32,3,33,4,34],2002:[5,36,4,35,5,36,6,37,8,38,9,39],2003:[10,41,9,40,10,41,11,42,13,43,14,44],2004:[15,46,15,46,16,47,17,48,19,49,20,50],2005:[21,52,20,51,21,52,22,53,24,54,25,55],2006:[26,57,25,56,26,57,27,58,29,59,30,60],2007:[31,2,30,1,31,2,32,3,34,4,35,5],2008:[36,7,36,7,37,8,38,9,40,10,41,11],2009:[42,13,41,12,42,13,43,14,45,15,46,16],2010:[47,18,46,17,47,18,48,19,50,20,51,21],2011:[52,23,51,22,52,23,53,24,55,25,56,26],2012:[57,28,57,28,58,29,59,30,1,31,2,32],2013:[3,34,2,33,3,34,4,35,6,36,7,37],2014:[8,39,7,38,8,39,9,40,11,41,12,42],2015:[13,44,12,43,13,44,14,45,16,46,17,47],2016:[18,49,18,49,19,50,20,51,22,52,23,53],2017:[24,55,23,54,24,55,25,56,27,57,28,58],2018:[29,0,28,59,29,0,30,1,32,2,33,3],2019:[34,5,33,4,34,5,35,6,37,7,38,8],2020:[39,10,39,10,40,11,41,12,43,13,44,14]};
+
+// 60種類
+const C=[
+  [1,'持久力のあるチーター'],[2,'社交的なたぬき'],[3,'活発な猿'],[4,'機敏なコアラ'],
+  [5,'世話好きな黒ヒョウ'],[6,'愛にあふれるトラ'],[7,'機敏なチーター'],[8,'品格のあるたぬき'],
+  [9,'野望を持った猿'],[10,'面倒見の良いコアラ'],[11,'誠実なこじか'],[12,'好感のもたれるゾウ'],
+  [13,'お調子者の狼'],[14,'自由気ままなひつじ'],[15,'親分肌の猿'],[16,'社交的なコアラ'],
+  [17,'大きな志をもったこじか'],[18,'傷つきやすいゾウ'],[19,'さすらいの狼'],[20,'穏やかなひつじ'],
+  [21,'物静かなペガサス'],[22,'輝く翼を持つペガサス'],[23,'純粋無垢なひつじ'],[24,'才能溢れる狼'],
+  [25,'ほのぼのとした猿'],[26,'努力家のひつじ'],[27,'波乱万丈なペガサス'],[28,'品格のあるペガサス'],
+  [29,'挑戦大好きなひつじ'],[30,'適応力のある狼'],
+  [31,'統率力のあるゾウ'],[32,'勤勉なこじか'],[33,'動きまわるコアラ'],[34,'世渡り上手な猿'],
+  [35,'頼りにされるひつじ'],[36,'愛される狼'],[37,'全力疾走するゾウ'],[38,'エレガントなこじか'],
+  [39,'大きな夢を持つコアラ'],[40,'献身的な猿'],[41,'努力家のたぬき'],[42,'勇敢なチーター'],
+  [43,'活発なトラ'],[44,'ロマンチストな黒ヒョウ'],[45,'器用で芸達者なコアラ'],[46,'用心深い狼'],
+  [47,'人情味にあふれるたぬき'],[48,'上品なチーター'],[49,'のんびりしたトラ'],[50,'浮き沈みが激しい黒ヒョウ'],
+  [51,'自由気ままなライオン'],[52,'リーダー気質のライオン'],[53,'人間味あふれる黒ヒョウ'],[54,'ポジティブなトラ'],
+  [55,'力強いトラ'],[56,'お気楽な黒ヒョウ'],[57,'感情豊かなライオン'],[58,'臆病なライオン'],
+  [59,'束縛が嫌いな黒ヒョウ'],[60,'天使のようなトラ']
+];
+
+const emoji={
+  'チーター':'🐆','たぬき':'🦝','猿':'🐵','コアラ':'🐨',
+  '黒ヒョウ':'🐈‍⬛','トラ':'🐯','こじか':'🦌','ゾウ':'🐘',
+  '狼':'🐺','ひつじ':'🐑','ペガサス':'🦄','ライオン':'🦁'
+};
+
+const traits={
+  '狼':['独立心','誠実','マイペース','約束を守る'],
+  'こじか':['純粋','素直','人懐っこい','甘え上手'],
+  '猿':['器用','社交的','好奇心旺盛','ユーモア'],
+  'チーター':['決断力','瞬発力','目標志向','スピード感'],
+  '黒ヒョウ':['感性豊か','正義感','情熱的','美意識'],
+  'ライオン':['リーダー','自信家','面倒見','存在感'],
+  'トラ':['義理人情','責任感','バランス','親分肌'],
+  'たぬき':['社交的','愛嬌','場の空気','人たらし'],
+  'コアラ':['平和主義','ロマンチスト','集中力','癒し系'],
+  'ゾウ':['努力家','忍耐力','繊細','大器晩成'],
+  'ひつじ':['優しい','仲間思い','情報通','協調性'],
+  'ペガサス':['自由','直感力','天才肌','独創的']
+};
+
+const descs={
+  '狼':'一匹狼という言葉通り、自分のペースを大切にする人です。独自の世界観を持ち、他人に流されない強さがあります。約束を守り、信頼される存在。一人の時間を大切にしますが、心を開いた相手にはとことん誠実です。',
+  'こじか':'純粋で素直な性格の持ち主。人懐っこく、周囲から愛される存在です。甘え上手で、人との距離感を大切にします。初対面では警戒しますが、仲良くなるととても親しみやすい人柄が現れます。',
+  '猿':'器用で頭の回転が速く、社交的な性格。どんな場面でも臨機応変に対応できる柔軟性があります。好奇心旺盛で新しいことに挑戦するのが好き。ユーモアのセンスがあり、場を明るくするムードメーカーです。',
+  'チーター':'目標に向かって一直線に突き進むタイプ。スピード感を大切にし、決断力があります。瞬発力に優れ、チャンスを逃しません。熱しやすく冷めやすい面もありますが、本気になった時の集中力は抜群です。',
+  '黒ヒョウ':'感性が鋭く、美的センスに優れた人。情熱的でありながらクールな一面も持ち合わせています。正義感が強く、弱い者を守ろうとする優しさがあります。プライドが高い分、努力を惜しみません。',
+  'ライオン':'堂々とした存在感があり、生まれながらのリーダータイプ。自信に満ち、周囲を引っ張る力があります。面倒見がよく、頼られることに喜びを感じます。プライドを大切にしながらも、心の中は温かい人です。',
+  'トラ':'義理人情に厚く、面倒見の良い親分肌タイプ。バランス感覚に優れ、周囲への気配りを忘れません。責任感が強く、一度引き受けたことは最後までやり遂げます。温かい人柄で多くの人から慕われます。',
+  'たぬき':'社交的で人当たりが良く、誰とでも仲良くなれる人。場の空気を読む力に長けています。のんびりしているように見えて、実は計算高い一面も。愛嬌があり、人から好かれる天性の魅力を持っています。',
+  'コアラ':'穏やかで平和主義な性格。争いごとを好まず、調和を大切にします。ロマンチストで夢見がちな一面も。好きなことに対しては驚くほどの集中力を発揮します。癒しのオーラで周囲を和ませる存在です。',
+  'ゾウ':'努力家でコツコツと物事を積み上げていくタイプ。忍耐力があり、一度決めたことは粘り強く取り組みます。デリケートな感性を持ち、他人の気持ちに敏感です。大器晩成型で、時間をかけて大きく成長します。',
+  'ひつじ':'穏やかで優しい性格の持ち主。仲間思いで、グループの中で調和を保つ役割を果たします。寂しがり屋な一面もあり、一人でいるよりも誰かと一緒にいることを好みます。情報収集能力に優れています。',
+  'ペガサス':'自由奔放で、束縛を嫌う天才肌タイプ。直感力に優れ、独創的なアイデアを生み出します。気分の浮き沈みがありますが、ノッている時の能力は計り知れません。型にはまらない生き方を貫きます。'
+};
+
+let gender='';
+
+function selectGender(el, g) {
+  document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  gender=g;
+}
+
+function doFortune() {
+  const y=parseInt(document.getElementById('birthYear').value);
+  const m=parseInt(document.getElementById('birthMonth').value);
+  const d=parseInt(document.getElementById('birthDay').value);
+
+  if(!y||!m||!d||m<1||m>12||d<1||d>31){
+    document.getElementById('formCard').classList.add('shake');
+    setTimeout(()=>document.getElementById('formCard').classList.remove('shake'),300);
+    return;
+  }
+  if(!Y[y]){
+    alert('1945年〜2020年の範囲で入力してください');
+    return;
+  }
+  if(!gender){
+    document.querySelectorAll('.gender-btn').forEach(b=>{b.classList.add('shake');setTimeout(()=>b.classList.remove('shake'),300);});
+    return;
+  }
+
+  const base=Y[y][m-1];
+  let total=base+d;
+  if(total>60)total-=60;
+  if(total<=0)total+=60;
+
+  const ch=C.find(c=>c[0]===total);
+  if(!ch)return;
+
+  const name=ch[1];
+  let animal='';
+  for(const k of Object.keys(emoji)){if(name.includes(k)){animal=k;break;}}
+
+  document.getElementById('resultEmoji').textContent=emoji[animal]||'🐾';
+  document.getElementById('resultNumber').textContent='No.'+total;
+  document.getElementById('resultName').textContent=name;
+  document.getElementById('resultType').textContent='〜 '+animal+'タイプ 〜';
+  document.getElementById('resultDesc').textContent=descs[animal]||'';
+
+  const traitDiv=document.getElementById('resultTraits');
+  traitDiv.innerHTML='';
+  (traits[animal]||[]).forEach(t=>{
+    const span=document.createElement('span');
+    span.className='trait-tag';
+    span.textContent='#'+t;
+    traitDiv.appendChild(span);
+  });
+
+  const rc=document.getElementById('resultCard');
+  rc.style.display='block';
+  setTimeout(()=>rc.scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+function retry(){
+  document.getElementById('resultCard').style.display='none';
+  document.getElementById('birthYear').value='';
+  document.getElementById('birthMonth').value='';
+  document.getElementById('birthDay').value='';
+  document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));
+  gender='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
